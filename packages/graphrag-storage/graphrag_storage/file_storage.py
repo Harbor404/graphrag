@@ -4,7 +4,6 @@
 """File-based Storage implementation of Storage."""
 
 import logging
-import os
 import re
 import shutil
 from collections.abc import Iterator
@@ -51,11 +50,13 @@ class FileStorage(Storage):
         num_total = len(all_files)
         num_filtered = 0
         for file in all_files:
-            match = file_pattern.search(f"{file}")
+            if not file.is_file():
+                num_filtered += 1
+                continue
+
+            filename = str(file.relative_to(self._base_dir))
+            match = file_pattern.search(filename)
             if match:
-                filename = f"{file}".replace(str(self._base_dir), "", 1)
-                if filename.startswith(os.sep):
-                    filename = filename[1:]
                 yield filename
                 num_loaded += 1
             else:
